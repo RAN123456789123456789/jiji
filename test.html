@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1>游戏加载测试</h1>
+        <div id="status">检查中...</div>
+        <div id="details"></div>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const detailsDiv = document.getElementById('details');
+
+        let checks = [];
+
+        // 检查1: 检查Three.js是否加载
+        function checkThreeJS() {
+            if (typeof THREE !== 'undefined') {
+                checks.push({ name: 'Three.js', status: 'success', message: '已加载' });
+                return true;
+            } else {
+                checks.push({ name: 'Three.js', status: 'error', message: '未加载' });
+                return false;
+            }
+        }
+
+        // 检查2: 检查文件是否存在
+        async function checkFiles() {
+            const files = [
+                'src/main.js',
+                'src/config/LevelConfig.js',
+                'styles/main.css',
+                'styles/ui.css'
+            ];
+
+            for (const file of files) {
+                try {
+                    const response = await fetch(file, { method: 'HEAD' });
+                    if (response.ok) {
+                        checks.push({ name: file, status: 'success', message: '存在' });
+                    } else {
+                        checks.push({ name: file, status: 'error', message: '不存在' });
+                    }
+                } catch (error) {
+                    checks.push({ name: file, status: 'error', message: '无法访问' });
+                }
+            }
+        }
+
+        // 检查3: 检查ES6模块支持
+        function checkES6Modules() {
+            if ('noModule' in HTMLScriptElement.prototype) {
+                checks.push({ name: 'ES6模块支持', status: 'success', message: '支持' });
+                return true;
+            } else {
+                checks.push({ name: 'ES6模块支持', status: 'error', message: '不支持' });
+                return false;
+            }
+        }
+
+        // 运行所有检查
+        async function runChecks() {
+            checkThreeJS();
+            checkES6Modules();
+            await checkFiles();
+
+            // 显示结果
+            let html = '<h2>检查结果:</h2><ul>';
+            checks.forEach(check => {
+                const className = check.status === 'success' ? 'success' : 'error';
+                html += `<li class="${className}">${check.name}: ${check.message}</li>`;
+            });
+            html += '</ul>';
+
+            detailsDiv.innerHTML = html;
+
+            const allPassed = checks.every(c => c.status === 'success');
+            if (allPassed) {
+                statusDiv.innerHTML = '<h2 class="success">✓ 所有检查通过！</h2><p>如果界面仍然不显示，请检查浏览器控制台的错误信息。</p>';
+            } else {
+                statusDiv.innerHTML = '<h2 class="error">✗ 发现问题</h2><p>请查看下面的检查结果。</p>';
+            }
+        }
+
+        // 页面加载后运行检查
+        window.addEventListener('load', () => {
+            setTimeout(runChecks, 500);
+        });
+    </script>
+</body>
+
+</html>
